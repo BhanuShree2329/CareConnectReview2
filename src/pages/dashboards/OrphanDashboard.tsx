@@ -26,7 +26,7 @@ export default function OrphanDashboard() {
     setLoading(true);
     try {
       const res = await orphanAPI.mine();
-      setRequests(res.data);
+      setRequests(Array.isArray(res.data) ? res.data : []);
     } catch (err: any) {
       toast({ title: "Failed to load", description: err.message, variant: "destructive" });
     } finally {
@@ -63,7 +63,7 @@ export default function OrphanDashboard() {
           )}
           {!loading && (
             <div className="space-y-3">
-              {requests.map((r) => {
+              {(Array.isArray(requests) ? requests : []).map((r) => {
                 const supportTypes = Array.isArray(r.support_types) ? r.support_types : JSON.parse(r.support_types || "[]");
                 return (
                   <div key={r.id} className="bg-card rounded-2xl border border-border p-5 shadow-card">

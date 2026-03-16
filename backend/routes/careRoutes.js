@@ -6,7 +6,7 @@ const { checkRole } = require("../middleware/roleMiddleware");
 
 router.post("/care-requests", verifyToken, checkRole("elder"), ctrl.submit);
 router.get("/care-requests/mine", verifyToken, checkRole("elder"), ctrl.myRequests);
-router.get("/care-requests/approved", verifyToken, checkRole("caretaker","admin"), ctrl.approved);
+router.get("/care-requests/approved", verifyToken, checkRole("caretaker", "admin"), ctrl.approved);
 router.get("/care-requests/pending", verifyToken, checkRole("admin"), ctrl.pending);
 router.get("/care-requests", verifyToken, checkRole("admin"), ctrl.all);
 router.put("/care-requests/:id/approve", verifyToken, checkRole("admin"), ctrl.approve);

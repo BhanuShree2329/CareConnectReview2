@@ -151,9 +151,9 @@ exports.approve = (req, res) => {
   const { id } = req.params;
 
   db.query(
-    `UPDATE orphan_requests SET status = 'approved' WHERE id = ?`,
+    "UPDATE orphan_requests SET status = 'approved' WHERE id = ?",
     [id],
-    (err) => {
+    (err, result) => {
       if (err) {
         console.error("Approve orphan request error:", err);
         return res.status(500).json({
@@ -171,9 +171,9 @@ exports.reject = (req, res) => {
   const { id } = req.params;
 
   db.query(
-    `UPDATE orphan_requests SET status = 'rejected' WHERE id = ?`,
+    "UPDATE orphan_requests SET status = 'rejected' WHERE id = ?",
     [id],
-    (err) => {
+    (err, result) => {
       if (err) {
         console.error("Reject orphan request error:", err);
         return res.status(500).json({

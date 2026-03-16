@@ -1,5 +1,6 @@
 const db = require("../config/db");
 
+// Elder submits a new care request
 exports.submit = (req, res) => {
   try {
     const { age, location, helpType, description } = req.body;
@@ -52,97 +53,82 @@ exports.submit = (req, res) => {
   }
 };
 
+// Elder sees own requests
 exports.myRequests = (req, res) => {
-  try {
-    const userId = req.user.id;
+  const userId = req.user.id;
 
-    const sql = `
-      SELECT id, elder_id, age, help_type, description, location, status, created_at, user_id
-      FROM care_requests
-      WHERE user_id = ?
-      ORDER BY created_at DESC
-    `;
+  const sql = `
+    SELECT *
+    FROM care_requests
+    WHERE user_id = ?
+    ORDER BY created_at DESC
+  `;
 
-    db.query(sql, [userId], (err, results) => {
+  db.query(sql, [userId], (err, results) => {
+    if (err) {
+      console.error("Fetch my care requests error:", err);
+      return res.status(500).json({
+        message: "Failed to fetch requests",
+        error: err.message,
+      });
+    }
+
+    return res.json(results);
+  });
+};
+
+// Admin sees all care requests
+exports.all = (req, res) => {
+  db.query(
+    `SELECT * FROM care_requests ORDER BY created_at DESC`,
+    (err, results) => {
       if (err) {
-        console.error("Fetch my requests error:", err);
+        console.error("Fetch all care requests error:", err);
         return res.status(500).json({
-          message: "Failed to fetch requests",
+          message: "Failed to fetch care requests",
           error: err.message,
         });
       }
 
       return res.json(results);
-    });
-  } catch (error) {
-    console.error("myRequests catch error:", error);
-    return res.status(500).json({
-      message: "Server error",
-      error: error.message,
-    });
-  }
-};
-
-exports.approved = (req, res) => {
-  const sql = `
-    SELECT *
-    FROM care_requests
-    WHERE status = 'approved'
-    ORDER BY created_at DESC
-  `;
-
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error("Fetch approved requests error:", err);
-      return res.status(500).json({
-        message: "Failed to fetch approved requests",
-        error: err.message,
-      });
     }
-
-    return res.json(results);
-  });
+  );
 };
 
+// Admin pending care requests
 exports.pending = (req, res) => {
-  const sql = `
-    SELECT *
-    FROM care_requests
-    WHERE status = 'pending'
-    ORDER BY created_at DESC
-  `;
+  db.query(
+    `SELECT * FROM care_requests WHERE status = 'pending' ORDER BY created_at DESC`,
+    (err, results) => {
+      if (err) {
+        console.error("Fetch pending care requests error:", err);
+        return res.status(500).json({
+          message: "Failed to fetch pending care requests",
+          error: err.message,
+        });
+      }
 
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error("Fetch pending requests error:", err);
-      return res.status(500).json({
-        message: "Failed to fetch pending requests",
-        error: err.message,
-      });
+      return res.json(results);
     }
-
-    return res.json(results);
-  });
+  );
 };
 
-exports.all = (req, res) => {
-  const sql = `
-    SELECT *
-    FROM care_requests
-    ORDER BY created_at DESC
-  `;
+// Approved care requests -> Priority section
+exports.approved = (req, res) => {
+  db.query(
+    `SELECT * FROM care_requests WHERE status = 'approved' ORDER BY created_at DESC`,
+    (err, results) => {
+      if (err) {
+        console.error("Fetch approved care requests error:", err);
+        return res.status(500).json({
+          message: "Failed to fetch approved care requests",
+          error: err.message,
+        });
+      }
 
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error("Fetch all requests error:", err);
-      return res.status(500).json({
-        message: "Failed to fetch all requests",
-        error: err.message,
-      });
+      return res.json(results);
     }
-
-    return res.json(results);
-  });
+  );
 };
 
 exports.approve = (req, res) => {
@@ -153,9 +139,9 @@ exports.approve = (req, res) => {
     [id],
     (err, result) => {
       if (err) {
-        console.error("Approve request error:", err);
+        console.error("Approve care request error:", err);
         return res.status(500).json({
-          message: "Failed to approve request",
+          message: "Failed to approve care request",
           error: err.message,
         });
       }
@@ -173,9 +159,9 @@ exports.reject = (req, res) => {
     [id],
     (err, result) => {
       if (err) {
-        console.error("Reject request error:", err);
+        console.error("Reject care request error:", err);
         return res.status(500).json({
-          message: "Failed to reject request",
+          message: "Failed to reject care request",
           error: err.message,
         });
       }
@@ -184,18 +170,17 @@ exports.reject = (req, res) => {
     }
   );
 };
-
 exports.accept = (req, res) => {
   const { id } = req.params;
 
   db.query(
-    "UPDATE care_requests SET status = 'assigned' WHERE id = ?",
+    `UPDATE care_requests SET status = 'assigned' WHERE id = ?`,
     [id],
-    (err, result) => {
+    (err) => {
       if (err) {
-        console.error("Accept request error:", err);
+        console.error("Accept care request error:", err);
         return res.status(500).json({
-          message: "Failed to accept request",
+          message: "Failed to accept care request",
           error: err.message,
         });
       }
@@ -209,18 +194,18 @@ exports.complete = (req, res) => {
   const { id } = req.params;
 
   db.query(
-    "UPDATE care_requests SET status = 'completed' WHERE id = ?",
+    `UPDATE care_requests SET status = 'completed' WHERE id = ?`,
     [id],
-    (err, result) => {
+    (err) => {
       if (err) {
-        console.error("Complete request error:", err);
+        console.error("Complete care request error:", err);
         return res.status(500).json({
-          message: "Failed to complete request",
+          message: "Failed to complete care request",
           error: err.message,
         });
       }
 
-      return res.json({ message: "Care request marked as completed" });
+      return res.json({ message: "Care request marked completed" });
     }
   );
 };
