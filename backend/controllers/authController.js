@@ -111,9 +111,7 @@ exports.login = async (req, res) => {
     if (user.status === "rejected") {
       return res.status(403).json({ message: "Your account has been rejected by admin." });
     }
-    if (user.status !== "approved") {
-      return res.status(403).json({ message: "Your account is pending admin approval." });
-    }
+    
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid email or password" });
