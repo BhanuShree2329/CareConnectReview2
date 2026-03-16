@@ -13,5 +13,6 @@ router.put("/care-requests/:id/approve", verifyToken, checkRole("admin"), ctrl.a
 router.put("/care-requests/:id/reject", verifyToken, checkRole("admin"), ctrl.reject);
 router.put("/care-requests/:id/accept", verifyToken, checkRole("caretaker"), ctrl.accept);
 router.put("/care-requests/:id/complete", verifyToken, checkRole("caretaker"), ctrl.complete);
+router.put("/care-requests/:id/assign-ngo", verifyToken, checkRole("admin"), ctrl.assignNgo);
 
 module.exports = router;

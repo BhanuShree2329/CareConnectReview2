@@ -209,3 +209,28 @@ exports.complete = (req, res) => {
     }
   );
 };
+
+exports.assignNgo = (req, res) => {
+  const { id } = req.params;
+  const { ngoId } = req.body;
+
+  if (!ngoId) {
+    return res.status(400).json({ message: "ngoId is required" });
+  }
+
+  db.query(
+    "UPDATE care_requests SET assigned_ngo_id = ? WHERE id = ?",
+    [ngoId, id],
+    (err) => {
+      if (err) {
+        console.error("Assign NGO to care request error:", err);
+        return res.status(500).json({
+          message: "Failed to assign NGO",
+          error: err.message,
+        });
+      }
+
+      return res.json({ message: "NGO linked to care request successfully" });
+    }
+  );
+};

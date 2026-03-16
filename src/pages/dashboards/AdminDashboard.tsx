@@ -185,31 +185,37 @@ export default function AdminDashboard() {
   };
 
   const assignNgo = async () => {
-    if (!assignModal || !selectedNgo) {
-      toast({
-        title: "Select an NGO first",
-        variant: "destructive",
-      });
-      return;
+  if (!assignModal || !selectedNgo) {
+    toast({
+      title: "Select an NGO first",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  setAssigning(true);
+  try {
+    if (assignModal.requestType === "care") {
+      await careAPI.assignNgo(assignModal.id, selectedNgo);
+      toast({ title: "NGO linked to care request successfully!" });
+    } else {
+      await orphanAPI.assignNgo(assignModal.id, selectedNgo);
+      toast({ title: "NGO linked to orphan request successfully!" });
     }
 
-    setAssigning(true);
-    try {
-      await orphanAPI.assignNgo(assignModal.id, selectedNgo);
-      toast({ title: "NGO assigned successfully!" });
-      setAssignModal(null);
-      setSelectedNgo("");
-      loadDashboard();
-    } catch (err: any) {
-      toast({
-        title: "Failed to assign NGO",
-        description: err.response?.data?.message || err.message,
-        variant: "destructive",
-      });
-    } finally {
-      setAssigning(false);
-    }
-  };
+    setAssignModal(null);
+    setSelectedNgo("");
+    loadDashboard();
+  } catch (err: any) {
+    toast({
+      title: "Failed to assign NGO",
+      description: err.response?.data?.message || err.message,
+      variant: "destructive",
+    });
+  } finally {
+    setAssigning(false);
+  }
+};
 
   const safeSupportTypes = (value: any) => {
     if (Array.isArray(value)) return value;
@@ -829,83 +835,125 @@ export default function AdminDashboard() {
                 ) : (
                   <div className="space-y-3">
                     {approvedCareRequests.map((r) => (
-                      <motion.div
-                        key={`priority-care-${r.id}`}
-                        variants={item}
-                        className="bg-card rounded-2xl border border-border p-5 shadow-card"
-                      >
-                        <div className="flex justify-between items-start gap-4">
-                          <div>
-                            <h3 className="font-bold text-card-foreground">
-                              Care Request
-                            </h3>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {r.help_type}
-                            </p>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {r.description}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {r.location}
-                              {r.age ? ` · Age ${r.age}` : ""}
-                            </p>
-                          </div>
+  <motion.div
+    key={`priority-care-${r.id}`}
+    variants={item}
+    className="bg-card rounded-2xl border border-border p-5 shadow-card"
+  >
+    <div className="flex justify-between items-start gap-4">
+      <div>
+        <h3 className="font-bold text-card-foreground">
+          Care Request
+        </h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          {r.help_type}
+        </p>
+        <p className="text-sm text-muted-foreground mt-1">
+          {r.description}
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          {r.location}
+          {r.age ? ` · Age ${r.age}` : ""}
+        </p>
+        <p className="text-sm font-semibold text-green-600 mt-2">
+  Priority: {r.priority || "LOW"}
+</p>
 
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setModal({ type: "care", data: r })}
-                            className="gap-1"
-                          >
-                            <Info className="w-4 h-4" /> Info
-                          </Button>
-                        </div>
-                      </motion.div>
-                    ))}
+{r.assigned_ngo_id && (
+  <p className="text-xs text-primary font-medium mt-1">
+    Linked NGO: {
+      ngos.find((n: any) => String(n.id) === String(r.assigned_ngo_id))?.organization ||
+      ngos.find((n: any) => String(n.id) === String(r.assigned_ngo_id))?.name ||
+      `NGO #${r.assigned_ngo_id}`
+    }
+  </p>
+)}
+      </div>
+
+      <div className="flex items-center gap-3">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setModal({ type: "care", data: r })}
+          className="gap-1"
+        >
+          <Info className="w-4 h-4" /> Info
+        </Button>
+
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            setAssignModal({ ...r, requestType: "care" });
+            setSelectedNgo("");
+          }}
+        >
+          Link NGO
+        </Button>
+      </div>
+    </div>
+  </motion.div>
+))}
 
                     {approvedOrphanRequests.map((r) => (
-                      <motion.div
-                        key={`priority-orphan-${r.id}`}
-                        variants={item}
-                        className="bg-card rounded-2xl border border-border p-5 shadow-card"
-                      >
-                        <div className="flex justify-between items-start gap-4">
-                          <div>
-                            <h3 className="font-bold text-card-foreground">
-                              Orphan Request
-                            </h3>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {r.child_name}
-                            </p>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {r.description}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Age {r.age}
-                            </p>
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {safeSupportTypes(r.support_types).map((t: string) => (
-                                <span
-                                  key={t}
-                                  className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground"
-                                >
-                                  {t}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
+  <motion.div
+    key={`priority-orphan-${r.id}`}
+    variants={item}
+    className="bg-card rounded-2xl border border-border p-5 shadow-card"
+  >
+    <div className="flex justify-between items-start gap-4">
+      <div>
+        <h3 className="font-bold text-card-foreground">
+          Orphan Request
+        </h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          {r.child_name}
+        </p>
+        <p className="text-sm text-muted-foreground mt-1">
+          {r.description}
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Age {r.age}
+        </p>
+        <div className="flex flex-wrap gap-1 mt-2">
+          {safeSupportTypes(r.support_types).map((t: string) => (
+            <span
+              key={t}
+              className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground"
+            >
+              {t}
+            </span>
+          ))}
+        </div>
+        <p className="text-sm font-semibold text-green-600 mt-2">
+          Priority: {r.priority || "LOW"}
+        </p>
+      </div>
 
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setModal({ type: "orphan", data: r })}
-                            className="gap-1"
-                          >
-                            <Info className="w-4 h-4" /> Info
-                          </Button>
-                        </div>
-                      </motion.div>
-                    ))}
+      <div className="flex items-center gap-3">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setModal({ type: "orphan", data: r })}
+          className="gap-1"
+        >
+          <Info className="w-4 h-4" /> Info
+        </Button>
+
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            setAssignModal({ ...r, requestType: "orphan" });
+            setSelectedNgo("");
+          }}
+        >
+          Link NGO
+        </Button>
+      </div>
+    </div>
+  </motion.div>
+))}
                   </div>
                 )}
               </motion.div>
@@ -975,7 +1023,10 @@ export default function AdminDashboard() {
             </div>
 
             <p className="text-sm text-muted-foreground mb-4">
-              For: <span className="font-medium text-foreground">{assignModal.child_name}</span>
+              For:{" "}
+<span className="font-medium text-foreground">
+  {assignModal.child_name || assignModal.help_type || "Request"}
+</span>
             </p>
 
             {ngos.length === 0 ? (

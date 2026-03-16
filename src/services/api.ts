@@ -62,6 +62,8 @@ export const careAPI = {
   reject: (id: number) => api.put(`/care-requests/${id}/reject`),
   accept: (id: number) => api.put(`/care-requests/${id}/accept`),
   complete: (id: number) => api.put(`/care-requests/${id}/complete`),
+  assignNgo: (id: number, ngoId: string | number) =>
+  api.put(`/care-requests/${id}/assign-ngo`, { ngoId }),
 };
 
 // ─── ORPHAN REQUESTS ────────────────────────────────────────────────────────
